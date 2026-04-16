@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import oshi.ffm.linux.LinuxLibcFunctions;
+import oshi.software.common.os.linux.LinuxNetworkParams;
 
 /**
  * FFM-based Linux network parameters. Overrides {@code gethostname} and {@code getaddrinfo} calls to use FFM.
@@ -27,7 +28,7 @@ final class LinuxNetworkParamsFFM extends LinuxNetworkParams {
     @Override
     public String getHostName() {
         try (Arena arena = Arena.ofConfined()) {
-            MemorySegment buf = arena.allocate(HOST_NAME_MAX + 1);
+            MemorySegment buf = arena.allocate(HOST_NAME_MAX + 1L);
             if (0 == LinuxLibcFunctions.gethostname(buf, HOST_NAME_MAX + 1L)) {
                 return buf.getString(0);
             }

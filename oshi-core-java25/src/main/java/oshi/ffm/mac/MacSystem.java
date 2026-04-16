@@ -4,10 +4,10 @@
  */
 package oshi.ffm.mac;
 
+import static java.lang.foreign.MemoryLayout.PathElement.groupElement;
 import static java.lang.foreign.MemoryLayout.paddingLayout;
 import static java.lang.foreign.MemoryLayout.sequenceLayout;
 import static java.lang.foreign.MemoryLayout.structLayout;
-import static java.lang.foreign.MemoryLayout.PathElement.groupElement;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_DOUBLE;
@@ -227,7 +227,8 @@ public interface MacSystem {
 
     StructLayout TIMEVAL = structLayout(//
             JAVA_LONG.withName("tv_sec"), // seconds
-            JAVA_INT.withName("tv_usec") // microseconds
+            JAVA_INT.withName("tv_usec"), // microseconds
+            paddingLayout(32) // align to 8-byte boundary (matches struct timeval on macOS 64-bit)
     );
 
     StructLayout RLIMIT = structLayout(//

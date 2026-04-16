@@ -5,6 +5,7 @@
 package oshi.ffm.windows;
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_CHAR;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
@@ -324,6 +325,208 @@ public final class Kernel32FFM extends WindowsForeignFunctions {
         } catch (Throwable t) {
             LOG.debug("Kernel32FFM.GetVolumeNameForVolumeMountPoint failed: {}", t.getMessage());
             return OptionalInt.empty();
+        }
+    }
+
+    private static final MethodHandle OpenProcess = downcall(K32, "OpenProcess", ADDRESS, JAVA_INT, JAVA_INT, JAVA_INT);
+
+    /**
+     * Opens an existing local process object.
+     *
+     * @param dwDesiredAccess The access to the process object
+     * @param bInheritHandle  If TRUE, processes created by this process will inherit the handle
+     * @param dwProcessId     The identifier of the local process to be opened
+     * @return Handle to the process, or null segment if failed
+     */
+    public static Optional<MemorySegment> OpenProcess(int dwDesiredAccess, boolean bInheritHandle, int dwProcessId) {
+        try {
+            MemorySegment handle = (MemorySegment) OpenProcess.invokeExact(dwDesiredAccess, bInheritHandle ? 1 : 0,
+                    dwProcessId);
+            if (handle == null || handle.address() == 0) {
+                return Optional.empty();
+            }
+            return Optional.of(handle);
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.OpenProcess failed: {}", t.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private static final MethodHandle GetProcessAffinityMask = downcall(K32, "GetProcessAffinityMask", JAVA_INT,
+            ADDRESS, ADDRESS, ADDRESS);
+
+    /**
+     * Retrieves the process affinity mask for the specified process and the system affinity mask.
+     *
+     * @param hProcess          Handle to the process
+     * @param lpProcessAffinity Pointer to receive the affinity mask for the process
+     * @param lpSystemAffinity  Pointer to receive the affinity mask for the system
+     * @return true if successful
+     */
+    public static boolean GetProcessAffinityMask(MemorySegment hProcess, MemorySegment lpProcessAffinity,
+            MemorySegment lpSystemAffinity) {
+        try {
+            return isSuccess((int) GetProcessAffinityMask.invokeExact(hProcess, lpProcessAffinity, lpSystemAffinity));
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.GetProcessAffinityMask failed: {}", t.getMessage());
+            return false;
+        }
+    }
+
+    private static final MethodHandle IsWow64Process = downcall(K32, "IsWow64Process", JAVA_INT, ADDRESS, ADDRESS);
+
+    /**
+     * Determines whether the specified process is running under WOW64.
+     *
+     * @param hProcess     Handle to the process
+     * @param Wow64Process Pointer to receive a value indicating WOW64 status
+     * @return true if the function succeeds
+     */
+    public static boolean IsWow64Process(MemorySegment hProcess, MemorySegment Wow64Process) {
+        try {
+            return isSuccess((int) IsWow64Process.invokeExact(hProcess, Wow64Process));
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.IsWow64Process failed: {}", t.getMessage());
+            return false;
+        }
+    }
+
+    private static final MethodHandle ReadProcessMemory = downcall(K32, "ReadProcessMemory", JAVA_INT, ADDRESS, ADDRESS,
+            ADDRESS, JAVA_LONG, ADDRESS);
+
+    /**
+     * Reads data from an area of memory in a specified process.
+     *
+     * @param hProcess            Handle to the process with memory to be read
+     * @param lpBaseAddress       Pointer to the base address in the specified process from which to read
+     * @param lpBuffer            Buffer to receive the contents
+     * @param nSize               Number of bytes to be read
+     * @param lpNumberOfBytesRead Pointer to receive the number of bytes transferred
+     * @return true if successful
+     */
+    public static boolean ReadProcessMemory(MemorySegment hProcess, MemorySegment lpBaseAddress, MemorySegment lpBuffer,
+            long nSize, MemorySegment lpNumberOfBytesRead) {
+        try {
+            return isSuccess(
+                    (int) ReadProcessMemory.invokeExact(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesRead));
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.ReadProcessMemory failed: {}", t.getMessage());
+            return false;
+        }
+    }
+
+    private static final MethodHandle QueryFullProcessImageNameW = downcall(K32, "QueryFullProcessImageNameW", JAVA_INT,
+            ADDRESS, JAVA_INT, ADDRESS, ADDRESS);
+
+    /**
+     * Retrieves the full name of the executable image for the specified process.
+     *
+     * @param hProcess  Handle to the process
+     * @param dwFlags   Flags (0 for Win32 path format, PROCESS_NAME_NATIVE for native system path format)
+     * @param lpExeName Buffer to receive the path
+     * @param lpdwSize  On input, size of the buffer in characters. On output, size of the path in characters
+     * @return true if successful
+     */
+    public static boolean QueryFullProcessImageName(MemorySegment hProcess, int dwFlags, MemorySegment lpExeName,
+            MemorySegment lpdwSize) {
+        try {
+            return isSuccess((int) QueryFullProcessImageNameW.invokeExact(hProcess, dwFlags, lpExeName, lpdwSize));
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.QueryFullProcessImageName failed: {}", t.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Retrieves the full name of the executable image for the specified process.
+     *
+     * @param hProcess Handle to the process
+     * @param dwFlags  Flags (0 for Win32 path format)
+     * @param arena    Arena for memory allocation
+     * @return The full process image name, or empty if failed
+     */
+    public static Optional<String> QueryFullProcessImageName(MemorySegment hProcess, int dwFlags, Arena arena) {
+        int maxPath = 260;
+        // Retry with growing buffer if needed (up to 32K which is max path on Windows)
+        while (maxPath <= 32768) {
+            MemorySegment buffer = arena.allocate(JAVA_CHAR, maxPath);
+            MemorySegment sizeSegment = arena.allocate(JAVA_INT);
+            sizeSegment.set(JAVA_INT, 0, maxPath);
+
+            if (QueryFullProcessImageName(hProcess, dwFlags, buffer, sizeSegment)) {
+                return Optional.of(readWideString(buffer));
+            }
+            // Check if buffer was too small (returned size >= maxPath)
+            int returnedSize = sizeSegment.get(JAVA_INT, 0);
+            if (returnedSize < maxPath) {
+                // Failure wasn't due to buffer size
+                break;
+            }
+            // Double the buffer size and retry
+            maxPath *= 2;
+        }
+        return Optional.empty();
+    }
+
+    private static final MethodHandle LocalFree = downcall(K32, "LocalFree", ADDRESS, ADDRESS);
+
+    /**
+     * Frees the specified local memory object and invalidates its handle.
+     *
+     * @param hMem A handle to the local memory object
+     * @return If the function succeeds, the return value is NULL
+     */
+    public static MemorySegment LocalFree(MemorySegment hMem) {
+        try {
+            return (MemorySegment) LocalFree.invokeExact(hMem);
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.LocalFree failed: {}", t.getMessage());
+            return hMem;
+        }
+    }
+
+    private static final MethodHandle VerSetConditionMask = downcall(K32, "VerSetConditionMask", JAVA_LONG, JAVA_LONG,
+            JAVA_INT, JAVA_BYTE);
+
+    /**
+     * Sets the bits of a 64-bit value to indicate the comparison operator to use for a specified operating system
+     * version attribute.
+     *
+     * @param conditionMask A value to be passed as the dwlConditionMask parameter of VerifyVersionInfo
+     * @param typeMask      A mask that indicates the member of the OSVERSIONINFOEX structure whose comparison operator
+     *                      is being set
+     * @param condition     The operator to be used for the comparison
+     * @return The condition mask value
+     */
+    public static long VerSetConditionMask(long conditionMask, int typeMask, byte condition) {
+        try {
+            return (long) VerSetConditionMask.invokeExact(conditionMask, typeMask, condition);
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.VerSetConditionMask failed: {}", t.getMessage());
+            return 0L;
+        }
+    }
+
+    private static final MethodHandle VerifyVersionInfoW = downcall(K32, "VerifyVersionInfoW", JAVA_INT, ADDRESS,
+            JAVA_INT, JAVA_LONG);
+
+    /**
+     * Compares a set of operating system version requirements to the corresponding values for the currently running
+     * version of the system.
+     *
+     * @param lpVersionInformation A pointer to an OSVERSIONINFOEX structure containing the operating system version
+     *                             requirements to compare
+     * @param dwTypeMask           A mask that indicates the members of the OSVERSIONINFOEX structure to be tested
+     * @param dwlConditionMask     The type of comparison to be used for each lpVersionInformation member being compared
+     * @return true if the currently running operating system satisfies the specified requirements
+     */
+    public static boolean VerifyVersionInfoW(MemorySegment lpVersionInformation, int dwTypeMask,
+            long dwlConditionMask) {
+        try {
+            return isSuccess((int) VerifyVersionInfoW.invokeExact(lpVersionInformation, dwTypeMask, dwlConditionMask));
+        } catch (Throwable t) {
+            LOG.debug("Kernel32FFM.VerifyVersionInfoW failed: {}", t.getMessage());
+            return false;
         }
     }
 }

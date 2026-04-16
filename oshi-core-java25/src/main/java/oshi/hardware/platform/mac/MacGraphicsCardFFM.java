@@ -4,26 +4,19 @@
  */
 package oshi.hardware.platform.mac;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import oshi.annotation.concurrent.ThreadSafe;
-import oshi.hardware.GraphicsCard;
 import oshi.hardware.GpuStats;
-import oshi.hardware.common.AbstractGraphicsCard;
-import oshi.util.Constants;
-import oshi.util.ExecutingCommand;
-import oshi.util.ParseUtil;
+import oshi.hardware.GraphicsCard;
+import oshi.hardware.common.platform.mac.MacGraphicsCard;
 import oshi.util.platform.mac.SysctlUtilFFM;
 
 /**
  * Graphics card info obtained by system_profiler SPDisplaysDataType.
  */
 @ThreadSafe
-final class MacGraphicsCardFFM extends AbstractGraphicsCard {
-
-    private static final boolean IS_APPLE_SILICON = "aarch64".equals(System.getProperty("os.arch"));
+final class MacGraphicsCardFFM extends MacGraphicsCard {
 
     MacGraphicsCardFFM(String name, String deviceId, String vendor, String versionInfo, long vram) {
         super(name, deviceId, vendor, versionInfo, vram);
@@ -35,55 +28,6 @@ final class MacGraphicsCardFFM extends AbstractGraphicsCard {
     }
 
     public static List<GraphicsCard> getGraphicsCards() {
-        List<GraphicsCard> cardList = new ArrayList<>();
-        List<String> sp = ExecutingCommand.runNative("system_profiler SPDisplaysDataType");
-        String name = Constants.UNKNOWN;
-        String deviceId = Constants.UNKNOWN;
-        String vendor = Constants.UNKNOWN;
-        List<String> versionInfoList = new ArrayList<>();
-        long vram = 0;
-        int cardNum = 0;
-        for (String line : sp) {
-            String[] split = line.trim().split(":", 2);
-            if (split.length == 2) {
-                String prefix = split[0].toLowerCase(Locale.ROOT);
-                if (prefix.equals("chipset model")) {
-                    if (cardNum++ > 0) {
-                        cardList.add(new MacGraphicsCardFFM(name, deviceId, vendor,
-                                versionInfoList.isEmpty() ? Constants.UNKNOWN : String.join(", ", versionInfoList),
-                                resolveVram(vram, name)));
-                        deviceId = Constants.UNKNOWN;
-                        vendor = Constants.UNKNOWN;
-                        vram = 0;
-                        versionInfoList.clear();
-                    }
-                    name = split[1].trim();
-                } else if (prefix.equals("device id")) {
-                    deviceId = split[1].trim();
-                } else if (prefix.equals("vendor")) {
-                    vendor = split[1].trim();
-                } else if (prefix.contains("version") || prefix.contains("revision")) {
-                    versionInfoList.add(line.trim());
-                } else if (prefix.startsWith("vram")) {
-                    vram = ParseUtil.parseDecimalMemorySizeToBinary(split[1].trim());
-                }
-            }
-        }
-        if (cardNum > 0) {
-            cardList.add(new MacGraphicsCardFFM(name, deviceId, vendor,
-                    versionInfoList.isEmpty() ? Constants.UNKNOWN : String.join(", ", versionInfoList),
-                    resolveVram(vram, name)));
-        }
-        return cardList;
-    }
-
-    private static long resolveVram(long parsedVram, String chipsetName) {
-        if (parsedVram > 0) {
-            return parsedVram;
-        }
-        if (chipsetName.contains("Apple")) {
-            return SysctlUtilFFM.sysctl("hw.memsize", 0L);
-        }
-        return parsedVram;
+        return parseGraphicsCards(MacGraphicsCardFFM::new, SysctlUtilFFM::sysctl);
     }
 }

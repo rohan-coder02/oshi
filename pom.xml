@@ -4,7 +4,7 @@
 
     <groupId>com.github.oshi</groupId>
     <artifactId>oshi-parent</artifactId>
-    <version>6.11.2-SNAPSHOT</version>
+    <version>6.12.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Operating System and Hardware Information</name>
@@ -42,6 +42,7 @@
     </developers>
 
     <modules>
+        <module>oshi-common</module>
         <module>oshi-core</module>
         <module>oshi-demo</module>
     </modules>
@@ -89,12 +90,14 @@
         <!-- internal, see https://issues.apache.org/jira/browse/MNG-7038 -->
         <main.basedir>${maven.multiModuleProjectDirectory}</main.basedir>
         <!-- Dependency versions -->
-        <!-- Users of the Spring Boot Starter Parent should include this property in their POM -->
+        <!-- Users of the Spring Boot Starter Parent should include this
+        property in their POM -->
         <jna.version>5.18.1</jna.version>
         <slf4j.version>2.0.17</slf4j.version>
         <osgi.slf4j.import.packages>org.slf4j;version="[1.7,3.0)"</osgi.slf4j.import.packages>
         <junit.version>5.14.3</junit.version>
         <hamcrest.version>3.0</hamcrest.version>
+        <assertj.version>3.27.7</assertj.version>
         <!-- Compile versions -->
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
@@ -113,7 +116,7 @@
         <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
         <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
         <bnd-maven-plugin.version>6.4.0</bnd-maven-plugin.version>
-        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
+        <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
         <junit-platform-maven-plugin.version>1.1.8</junit-platform-maven-plugin.version>
         <!-- reporting plugins -->
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
@@ -141,7 +144,7 @@
         <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
         <!-- Misc. -->
         <sonar-maven-plugin.version>5.5.0.6356</sonar-maven-plugin.version>
-        <dependency-check-maven.version>12.2.0</dependency-check-maven.version>
+        <dependency-check-maven.version>12.2.1</dependency-check-maven.version>
         <puppycrawl.checkstyle.version>13.4.0</puppycrawl.checkstyle.version>
         <m2e.lifecycle-mapping.version>1.0.0</m2e.lifecycle-mapping.version>
     </properties>
@@ -160,8 +163,12 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven-compiler-plugin.version}</version>
                     <configuration>
-                        <!-- Slightly faster builds, see https://issues.apache.org/jira/browse/MCOMPILER-209 -->
+                        <!-- Slightly faster builds, see
+                        https://issues.apache.org/jira/browse/MCOMPILER-209 -->
                         <useIncrementalCompilation>false</useIncrementalCompilation>
+                        <compilerArgs>
+                            <arg>-Xlint:-options</arg>
+                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -229,7 +236,8 @@
                     <artifactId>maven-site-plugin</artifactId>
                     <version>${maven-site-plugin.version}</version>
                     <configuration>
-                        <!-- don't deploy site with maven-site-plugin (instead use scm publish during release) -->
+                        <!-- don't deploy site with maven-site-plugin (instead
+                        use scm publish during release) -->
                         <skipDeploy>true</skipDeploy>
                         <relativizeSiteLinks>false</relativizeSiteLinks>
                     </configuration>
@@ -257,7 +265,8 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                     <configuration>
-                        <argLine>-Xmx1024m -XX:MaxPermSize=256m ${enable.native.access}</argLine>
+                        <argLine>-Xmx1024m -XX:MaxPermSize=256m
+                            ${enable.native.access}</argLine>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                         <forkCount>4</forkCount>
                         <reuseForks>true</reuseForks>
@@ -297,6 +306,9 @@
                                 <additionalOption>${enable.native.access}</additionalOption>
                             </additionalOptions>
                         </javaOptions>
+                        <tweaks>
+                            <failIfNoTests>false</failIfNoTests>
+                        </tweaks>
                     </configuration>
                 </plugin>
                 <!-- Packaging types / tools -->
@@ -428,10 +440,14 @@
                         </archive>
                     </configuration>
                     <executions>
-                        <!-- Here we override the super-pom attach-sources execution id which calls sources:jar goal. That
-                            goals forks the lifecycle, causing the generate-sources phase to be called twice for the install goal. Starting with Maven
-                            3.4.0 (https://issues.apache.org/jira/browse/MNG-5940) this is not needed anymore. -->
-                        <!-- except that OSSRH fails with no sources with this excluded <execution> <id>attach-sources</id>
+                        <!-- Here we override the super-pom attach-sources
+                        execution id which calls sources:jar goal. That
+                            goals forks the lifecycle, causing the generate-sources phase to be called
+                        twice for the install goal. Starting with Maven
+                            3.4.0 (https://issues.apache.org/jira/browse/MNG-5940) this is not needed
+                        anymore. -->
+                        <!-- except that OSSRH fails with no sources with this
+                        excluded <execution> <id>attach-sources</id>
                             <phase>DISABLE_FORKED_LIFECYCLE_MSOURCES-13</phase> </execution> -->
                     </executions>
                 </plugin>
@@ -471,6 +487,9 @@
                                     <include>**/*.yml</include>
                                     <include>**/*.yaml</include>
                                 </includes>
+                                <excludes>
+                                    <exclude>**/target/**</exclude>
+                                </excludes>
                                 <trimTrailingWhitespace />
                                 <endWithNewline />
                                 <indent>
@@ -482,6 +501,9 @@
                                 <includes>
                                     <include>**/*.xml</include>
                                 </includes>
+                                <excludes>
+                                    <exclude>**/target/**</exclude>
+                                </excludes>
                                 <trimTrailingWhitespace />
                                 <endWithNewline />
                                 <indent>
@@ -688,10 +710,12 @@
                         <configuration>
                             <rules>
                                 <RestrictImports>
-                                    <reason>Disallow dependencies not on module path</reason>
+                                    <reason>Disallow dependencies not on module
+                                        path</reason>
                                     <includeTestCode>true</includeTestCode>
                                     <bannedImports>
-                                        <!-- Disallow all imports except explicitly allowed -->
+                                        <!-- Disallow all imports except
+                                        explicitly allowed -->
                                         <bannedImport>**</bannedImport>
                                     </bannedImports>
                                     <allowedImports>
@@ -706,8 +730,13 @@
                                         <allowedImport>org.junit.jupiter.api.**</allowedImport>
                                         <allowedImport>static org.hamcrest.**</allowedImport>
                                     </allowedImports>
-                                    <!-- No restrictions on oshi-demo -->
-                                    <exclusion>oshi.demo.**</exclusion>
+                                    <!-- No restrictions on oshi-demo or
+                                    oshi-benchmark -->
+                                    <exclusions>
+                                        <exclusion>oshi.demo.**</exclusion>
+                                        <exclusion>oshi.benchmark.**</exclusion>
+                                        <exclusion>oshi.comparison.**</exclusion>
+                                    </exclusions>
                                 </RestrictImports>
                             </rules>
                         </configuration>
@@ -770,17 +799,21 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>**/driver/**</exclude>
-                        <exclude>**/common/**</exclude>
-                        <exclude>**/Abstract*</exclude>
                         <exclude>**/annotation/**</exclude>
-                        <exclude>**/jna/**</exclude>
-                        <exclude>**/platform/**</exclude>
-                        <exclude>**/linux/**</exclude>
-                        <exclude>**/mac/**</exclude>
-                        <exclude>**/windows/**</exclude>
-                        <exclude>**/unix/**</exclude>
+                        <exclude>**/benchmark/**</exclude>
                         <exclude>**/demo/**</exclude>
+                        <exclude>**/ffm/**</exclude>
+                        <exclude>**/jna/**</exclude>
+                        <exclude>**/unix/aix/**</exclude>
+                        <exclude>**/unix/freebsd/**</exclude>
+                        <exclude>**/unix/openbsd/**</exclude>
+                        <exclude>**/unix/solaris/**</exclude>
+                        <exclude>**/unix/*Aix*</exclude>
+                        <exclude>**/unix/*Bsd*</exclude>
+                        <exclude>**/unix/*FreeBsd*</exclude>
+                        <exclude>**/unix/*OpenBsd*</exclude>
+                        <exclude>**/unix/*Solaris*</exclude>
+                        <exclude>**/unix/UnixBaseboard*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -967,7 +1000,8 @@
                 <maven.compiler.testRelease>${maven.compiler.testTarget}</maven.compiler.testRelease>
             </properties>
         </profile>
-        <!-- for oshi-core and oshi-core-java11: enable-native-access switch not available before JDK16 -->
+        <!-- for oshi-core and oshi-core-java11: enable-native-access switch not
+        available before JDK16 -->
         <profile>
             <id>pre-java16</id>
             <activation>
@@ -995,8 +1029,16 @@
             <!-- Only include java25 and dist modules on Java 25+ -->
             <modules>
                 <module>oshi-core-java25</module>
+                <module>oshi-benchmark</module>
                 <module>oshi-dist</module>
             </modules>
+        </profile>
+        <profile>
+            <!-- Activates oshi-benchmark tests and aggregate JaCoCo report.
+                 Use: mvnw test -Paggregate-coverage
+                 The profile is defined here as a placeholder; oshi-benchmark
+                 overrides maven.test.skip to enable its comparison tests. -->
+            <id>aggregate-coverage</id>
         </profile>
         <profile>
             <id>checks</id>
@@ -1136,7 +1178,9 @@
                                 <configuration>
                                     <keyname>${gpg.keyname}</keyname>
                                     <passphraseServerId>${gpg.keyname}</passphraseServerId>
-                                    <!-- GPG 2.1 requires pinentry-mode to be set to loopback in order to pick up the gpg.passphrase
+                                    <!-- GPG 2.1 requires pinentry-mode to be
+                                    set to loopback in order to pick up the
+                                    gpg.passphrase
                                         value defined in Maven settings.xml. -->
                                     <gpgArguments>
                                         <arg>--pinentry-mode</arg>

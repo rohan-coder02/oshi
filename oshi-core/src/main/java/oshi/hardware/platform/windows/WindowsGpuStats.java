@@ -15,15 +15,15 @@ import org.slf4j.LoggerFactory;
 import com.sun.jna.platform.win32.COM.WbemcliUtil.WmiResult;
 
 import oshi.annotation.concurrent.ThreadSafe;
-import oshi.driver.windows.perfmon.GpuInformation;
-import oshi.driver.windows.perfmon.GpuInformation.GpuAdapterMemoryProperty;
-import oshi.driver.windows.perfmon.GpuInformation.GpuEngineProperty;
+import oshi.driver.common.windows.perfmon.GpuInformation.GpuAdapterMemoryProperty;
+import oshi.driver.common.windows.perfmon.GpuInformation.GpuEngineProperty;
+import oshi.driver.windows.perfmon.GpuInformationJNA;
 import oshi.driver.windows.wmi.LhmSensor;
 import oshi.driver.windows.wmi.LhmSensor.LhmSensorProperty;
 import oshi.hardware.GpuStats;
 import oshi.hardware.GpuTicks;
-import oshi.util.gpu.AdlUtil;
-import oshi.util.gpu.NvmlUtil;
+import oshi.util.gpu.AdlUtilJNA;
+import oshi.util.gpu.NvmlUtilJNA;
 import oshi.util.platform.windows.WmiUtil;
 import oshi.util.tuples.Pair;
 
@@ -95,7 +95,7 @@ final class WindowsGpuStats implements GpuStats {
         if (luidPrefix.isEmpty()) {
             return new GpuTicks(0L, 0L);
         }
-        Pair<List<String>, Map<GpuEngineProperty, List<Long>>> engineData = GpuInformation.queryGpuEngineCounters();
+        Pair<List<String>, Map<GpuEngineProperty, List<Long>>> engineData = GpuInformationJNA.queryGpuEngineCounters();
         List<String> instances = engineData.getA();
         Map<GpuEngineProperty, List<Long>> values = engineData.getB();
         List<Long> runningTimes = values.get(GpuEngineProperty.RUNNING_TIME);
@@ -195,14 +195,14 @@ final class WindowsGpuStats implements GpuStats {
         checkOpen();
         String nvmlDevice = findNvmlDevice();
         if (nvmlDevice != null) {
-            double val = NvmlUtil.getTemperature(nvmlDevice);
+            double val = NvmlUtilJNA.getTemperature(nvmlDevice);
             if (val >= 0) {
                 return val;
             }
         }
         int adlIndex = findAdlIndex();
         if (adlIndex >= 0) {
-            double val = AdlUtil.getTemperature(adlIndex);
+            double val = AdlUtilJNA.getTemperature(adlIndex);
             if (val >= 0) {
                 return val;
             }
@@ -215,14 +215,14 @@ final class WindowsGpuStats implements GpuStats {
         checkOpen();
         String nvmlDevice = findNvmlDevice();
         if (nvmlDevice != null) {
-            double val = NvmlUtil.getPowerDraw(nvmlDevice);
+            double val = NvmlUtilJNA.getPowerDraw(nvmlDevice);
             if (val >= 0) {
                 return val;
             }
         }
         int adlIndex = findAdlIndex();
         if (adlIndex >= 0) {
-            double val = AdlUtil.getPowerDraw(adlIndex);
+            double val = AdlUtilJNA.getPowerDraw(adlIndex);
             if (val >= 0) {
                 return val;
             }
@@ -239,14 +239,14 @@ final class WindowsGpuStats implements GpuStats {
         checkOpen();
         String nvmlDevice = findNvmlDevice();
         if (nvmlDevice != null) {
-            long val = NvmlUtil.getCoreClockMhz(nvmlDevice);
+            long val = NvmlUtilJNA.getCoreClockMhz(nvmlDevice);
             if (val >= 0) {
                 return val;
             }
         }
         int adlIndex = findAdlIndex();
         if (adlIndex >= 0) {
-            long val = AdlUtil.getCoreClockMhz(adlIndex);
+            long val = AdlUtilJNA.getCoreClockMhz(adlIndex);
             if (val >= 0) {
                 return val;
             }
@@ -260,14 +260,14 @@ final class WindowsGpuStats implements GpuStats {
         checkOpen();
         String nvmlDevice = findNvmlDevice();
         if (nvmlDevice != null) {
-            long val = NvmlUtil.getMemoryClockMhz(nvmlDevice);
+            long val = NvmlUtilJNA.getMemoryClockMhz(nvmlDevice);
             if (val >= 0) {
                 return val;
             }
         }
         int adlIndex = findAdlIndex();
         if (adlIndex >= 0) {
-            long val = AdlUtil.getMemoryClockMhz(adlIndex);
+            long val = AdlUtilJNA.getMemoryClockMhz(adlIndex);
             if (val >= 0) {
                 return val;
             }
@@ -281,14 +281,14 @@ final class WindowsGpuStats implements GpuStats {
         checkOpen();
         String nvmlDevice = findNvmlDevice();
         if (nvmlDevice != null) {
-            double val = NvmlUtil.getFanSpeedPercent(nvmlDevice);
+            double val = NvmlUtilJNA.getFanSpeedPercent(nvmlDevice);
             if (val >= 0) {
                 return val;
             }
         }
         int adlIndex = findAdlIndex();
         if (adlIndex >= 0) {
-            double val = AdlUtil.getFanSpeedPercent(adlIndex);
+            double val = AdlUtilJNA.getFanSpeedPercent(adlIndex);
             if (val >= 0) {
                 return val;
             }
@@ -311,7 +311,7 @@ final class WindowsGpuStats implements GpuStats {
         if (luidPrefix.isEmpty()) {
             return -1L;
         }
-        Pair<List<String>, Map<GpuAdapterMemoryProperty, List<Long>>> adapterData = GpuInformation
+        Pair<List<String>, Map<GpuAdapterMemoryProperty, List<Long>>> adapterData = GpuInformationJNA
                 .queryGpuAdapterMemoryCounters();
         List<String> instances = adapterData.getA();
         List<Long> values = adapterData.getB().get(property);
@@ -331,16 +331,16 @@ final class WindowsGpuStats implements GpuStats {
         if (cachedNvmlDevice != null) {
             return cachedNvmlDevice.isEmpty() ? null : cachedNvmlDevice;
         }
-        if (!NvmlUtil.isAvailable()) {
+        if (!NvmlUtilJNA.isAvailable()) {
             cachedNvmlDevice = "";
             return null;
         }
         String id = null;
         if (!pciBusId.isEmpty()) {
-            id = NvmlUtil.findDevice(pciBusId);
+            id = NvmlUtilJNA.findDevice(pciBusId);
         }
         if (id == null) {
-            id = NvmlUtil.findDeviceByName(cardName);
+            id = NvmlUtilJNA.findDeviceByName(cardName);
         }
         cachedNvmlDevice = id != null ? id : "";
         return id;
@@ -350,11 +350,11 @@ final class WindowsGpuStats implements GpuStats {
         if (cachedAdlIndex != Integer.MIN_VALUE) {
             return cachedAdlIndex;
         }
-        if (!AdlUtil.isAvailable() || pciBusNumber < 0) {
+        if (!AdlUtilJNA.isAvailable() || pciBusNumber < 0) {
             cachedAdlIndex = -1;
             return -1;
         }
-        cachedAdlIndex = AdlUtil.findAdapterIndex(pciBusNumber);
+        cachedAdlIndex = AdlUtilJNA.findAdapterIndex(pciBusNumber);
         return cachedAdlIndex;
     }
 

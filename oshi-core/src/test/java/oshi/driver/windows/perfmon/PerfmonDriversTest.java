@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 The OSHI Project Contributors
+ * Copyright 2022-2026 The OSHI Project Contributors
  * SPDX-License-Identifier: MIT
  */
 package oshi.driver.windows.perfmon;
@@ -7,25 +7,25 @@ package oshi.driver.windows.perfmon;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.is;
-import static oshi.driver.windows.perfmon.PerfmonConstants.MEMORY;
-import static oshi.driver.windows.perfmon.PerfmonConstants.PAGING_FILE;
-import static oshi.driver.windows.perfmon.PerfmonConstants.PHYSICAL_DISK;
-import static oshi.driver.windows.perfmon.PerfmonConstants.PROCESS;
-import static oshi.driver.windows.perfmon.PerfmonConstants.PROCESSOR;
-import static oshi.driver.windows.perfmon.PerfmonConstants.PROCESSOR_INFORMATION;
-import static oshi.driver.windows.perfmon.PerfmonConstants.SYSTEM;
-import static oshi.driver.windows.perfmon.PerfmonConstants.THREAD;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERFPROC_PROCESS;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERFPROC_PROCESS_WHERE_IDPROCESS_0;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERFPROC_PROCESS_WHERE_NOT_NAME_LIKE_TOTAL;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_COUNTERS_PROCESSOR_INFORMATION_WHERE_NOT_NAME_LIKE_TOTAL;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_DISK_PHYSICAL_DISK_WHERE_NAME_NOT_TOTAL;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_MEMORY;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_PAGING_FILE;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_PROCESSOR_WHERE_NAME_NOT_TOTAL;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_PROCESSOR_WHERE_NAME_TOTAL;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_SYSTEM;
-import static oshi.driver.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_PROC_THREAD_WHERE_NOT_NAME_LIKE_TOTAL;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.MEMORY;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.PAGING_FILE;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.PHYSICAL_DISK;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.PROCESS;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.PROCESSOR;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.PROCESSOR_INFORMATION;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.SYSTEM;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.THREAD;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERFPROC_PROCESS;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERFPROC_PROCESS_WHERE_IDPROCESS_0;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERFPROC_PROCESS_WHERE_NOT_NAME_LIKE_TOTAL;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_COUNTERS_PROCESSOR_INFORMATION_WHERE_NOT_NAME_LIKE_TOTAL;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_DISK_PHYSICAL_DISK_WHERE_NAME_NOT_TOTAL;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_MEMORY;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_PAGING_FILE;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_PROCESSOR_WHERE_NAME_NOT_TOTAL;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_PROCESSOR_WHERE_NAME_TOTAL;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_OS_SYSTEM;
+import static oshi.driver.common.windows.perfmon.PerfmonConstants.WIN32_PERF_RAW_DATA_PERF_PROC_THREAD_WHERE_NOT_NAME_LIKE_TOTAL;
 
 import java.util.List;
 import java.util.Map;
@@ -36,21 +36,21 @@ import org.junit.jupiter.api.condition.OS;
 
 import com.sun.jna.platform.win32.VersionHelpers;
 
-import oshi.driver.windows.perfmon.MemoryInformation.PageSwapProperty;
-import oshi.driver.windows.perfmon.PagingFile.PagingPercentProperty;
-import oshi.driver.windows.perfmon.PhysicalDisk.PhysicalDiskProperty;
-import oshi.driver.windows.perfmon.ProcessInformation.HandleCountProperty;
-import oshi.driver.windows.perfmon.ProcessInformation.IdleProcessorTimeProperty;
-import oshi.driver.windows.perfmon.ProcessInformation.ProcessPerformanceProperty;
-import oshi.driver.windows.perfmon.ProcessorInformation.InterruptsProperty;
-import oshi.driver.windows.perfmon.ProcessorInformation.ProcessorFrequencyProperty;
-import oshi.driver.windows.perfmon.ProcessorInformation.ProcessorTickCountProperty;
-import oshi.driver.windows.perfmon.ProcessorInformation.ProcessorUtilityTickCountProperty;
-import oshi.driver.windows.perfmon.SystemInformation.ContextSwitchProperty;
-import oshi.driver.windows.perfmon.ThreadInformation.ThreadPerformanceProperty;
+import oshi.driver.common.windows.perfmon.MemoryInformation.PageSwapProperty;
+import oshi.driver.common.windows.perfmon.PagingFile.PagingPercentProperty;
+import oshi.driver.common.windows.perfmon.PdhCounterWildcardProperty;
+import oshi.driver.common.windows.perfmon.PhysicalDisk.PhysicalDiskProperty;
+import oshi.driver.common.windows.perfmon.ProcessInformation.HandleCountProperty;
+import oshi.driver.common.windows.perfmon.ProcessInformation.IdleProcessorTimeProperty;
+import oshi.driver.common.windows.perfmon.ProcessInformation.ProcessPerformanceProperty;
+import oshi.driver.common.windows.perfmon.ProcessorInformation.InterruptsProperty;
+import oshi.driver.common.windows.perfmon.ProcessorInformation.ProcessorFrequencyProperty;
+import oshi.driver.common.windows.perfmon.ProcessorInformation.ProcessorTickCountProperty;
+import oshi.driver.common.windows.perfmon.ProcessorInformation.ProcessorUtilityTickCountProperty;
+import oshi.driver.common.windows.perfmon.SystemInformation.ContextSwitchProperty;
+import oshi.driver.common.windows.perfmon.ThreadInformation.ThreadPerformanceProperty;
 import oshi.util.platform.windows.PerfCounterQuery;
 import oshi.util.platform.windows.PerfCounterWildcardQuery;
-import oshi.util.platform.windows.PerfCounterWildcardQuery.PdhCounterWildcardProperty;
 import oshi.util.tuples.Pair;
 
 @EnabledOnOs(OS.WINDOWS)
@@ -170,7 +170,7 @@ class PerfmonDriversTest {
                 ThreadPerformanceProperty.class, WIN32_PERF_RAW_DATA_PERF_PROC_THREAD_WHERE_NOT_NAME_LIKE_TOTAL));
     }
 
-    private <T extends PdhCounterWildcardProperty> void testWildcardCounters(String s,
+    private <T extends Enum<T> & PdhCounterWildcardProperty> void testWildcardCounters(String s,
             Pair<List<String>, Map<T, List<Long>>> counterData) {
         int instanceCount = counterData.getA().size();
         Map<T, List<Long>> counters = counterData.getB();
@@ -178,8 +178,7 @@ class PerfmonDriversTest {
             assertThat("Failed " + s + " instance count", counter.size(), is(instanceCount));
         }
 
-        @SuppressWarnings("unchecked")
-        int expectedSize = ((Class<T>) counters.keySet().iterator().next().getClass()).getEnumConstants().length - 1;
+        int expectedSize = counters.keySet().iterator().next().getDeclaringClass().getEnumConstants().length - 1;
         assertThat("Failed " + s + " map size", counters, is(aMapWithSize(expectedSize)));
     }
 }

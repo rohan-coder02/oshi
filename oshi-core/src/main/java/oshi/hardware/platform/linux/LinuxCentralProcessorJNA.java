@@ -20,9 +20,13 @@ import com.sun.jna.platform.linux.Udev.UdevEnumerate;
 import com.sun.jna.platform.linux.Udev.UdevListEntry;
 
 import oshi.annotation.concurrent.ThreadSafe;
+import oshi.driver.linux.proc.AuxvJNA;
+import oshi.hardware.common.platform.linux.LinuxCentralProcessor;
 import oshi.jna.platform.linux.LinuxLibc;
+import oshi.software.os.linux.LinuxOperatingSystemJNA;
 import oshi.util.FileUtil;
 import oshi.util.ParseUtil;
+import oshi.util.driver.linux.proc.Auxv;
 import oshi.util.tuples.Quartet;
 
 /**
@@ -31,6 +35,10 @@ import oshi.util.tuples.Quartet;
  */
 @ThreadSafe
 final class LinuxCentralProcessorJNA extends LinuxCentralProcessor {
+
+    LinuxCentralProcessorJNA() {
+        super(LinuxOperatingSystemJNA.hz());
+    }
 
     @Override
     protected Quartet<List<LogicalProcessor>, List<ProcessorCache>, Map<Integer, Integer>, Map<Integer, String>> readTopologyWithUdev() {
@@ -138,6 +146,11 @@ final class LinuxCentralProcessorJNA extends LinuxCentralProcessor {
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected long queryHwcap() {
+        return AuxvJNA.queryAuxv().getOrDefault(Auxv.AT_HWCAP, 0L);
     }
 
     @Override

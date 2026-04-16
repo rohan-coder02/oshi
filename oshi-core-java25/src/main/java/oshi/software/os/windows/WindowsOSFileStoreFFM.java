@@ -4,100 +4,42 @@
  */
 package oshi.software.os.windows;
 
-import oshi.software.common.AbstractOSFileStore;
-import oshi.software.os.OSFileStore;
-
 import java.util.List;
 
-public class WindowsOSFileStoreFFM extends AbstractOSFileStore {
+import oshi.annotation.concurrent.ThreadSafe;
+import oshi.software.common.os.windows.WindowsOSFileStore;
+import oshi.software.os.OSFileStore;
 
-    private String logicalVolume;
-    private String description;
-    private String fsType;
-
-    private long freeSpace;
-    private long usableSpace;
-    private long totalSpace;
-    private long freeInodes;
-    private long totalInodes;
+/**
+ * FFM-based Windows OSFileStore implementation.
+ */
+@ThreadSafe
+public class WindowsOSFileStoreFFM extends WindowsOSFileStore {
 
     public WindowsOSFileStoreFFM(String name, String volume, String label, String mount, String options, String uuid,
-            String logicalVolume, String description, String fsType, long freeSpace, long usableSpace, long totalSpace,
-            long freeInodes, long totalInodes, boolean local) {
-        super(name, volume, label, mount, options, uuid, local);
-        this.logicalVolume = logicalVolume;
-        this.description = description;
-        this.fsType = fsType;
-        this.freeSpace = freeSpace;
-        this.usableSpace = usableSpace;
-        this.totalSpace = totalSpace;
-        this.freeInodes = freeInodes;
-        this.totalInodes = totalInodes;
-    }
-
-    @Override
-    public String getLogicalVolume() {
-        return this.logicalVolume;
-    }
-
-    @Override
-    public String getDescription() {
-        return this.description;
-    }
-
-    @Override
-    public String getType() {
-        return this.fsType;
-    }
-
-    @Override
-    public long getFreeSpace() {
-        return this.freeSpace;
-    }
-
-    @Override
-    public long getUsableSpace() {
-        return this.usableSpace;
-    }
-
-    @Override
-    public long getTotalSpace() {
-        return this.totalSpace;
-    }
-
-    @Override
-    public long getFreeInodes() {
-        return this.freeInodes;
-    }
-
-    @Override
-    public long getTotalInodes() {
-        return this.totalInodes;
+            boolean local, String logicalVolume, String description, String fsType, long freeSpace, long usableSpace,
+            long totalSpace, long freeInodes, long totalInodes) {
+        super(name, volume, label, mount, options, uuid, local, logicalVolume, description, fsType, freeSpace,
+                usableSpace, totalSpace, freeInodes, totalInodes);
     }
 
     @Override
     public boolean updateAttributes() {
         // Check if we have the volume locally
-        List<OSFileStore> volumes = WindowsFileSystemFFM.getLocalVolumes(getVolume());
-        if (volumes.isEmpty()) {
-            // Not locally, search WMI using FFM-based implementation
+        List<OSFileStore> volumes;
+        if (isLocal()) {
+            volumes = WindowsFileSystemFFM.getLocalVolumes(getVolume());
+        } else {
+            // Not locally, search WMI
             String nameToMatch = getMount().length() < 2 ? null : getMount().substring(0, 2);
             volumes = WindowsFileSystemFFM.getWmiVolumes(nameToMatch, false);
         }
         for (OSFileStore fileStore : volumes) {
             if (getVolume().equals(fileStore.getVolume()) && getMount().equals(fileStore.getMount())) {
-                this.logicalVolume = fileStore.getLogicalVolume();
-                this.description = fileStore.getDescription();
-                this.fsType = fileStore.getType();
-                this.freeSpace = fileStore.getFreeSpace();
-                this.usableSpace = fileStore.getUsableSpace();
-                this.totalSpace = fileStore.getTotalSpace();
-                this.freeInodes = fileStore.getFreeInodes();
-                this.totalInodes = fileStore.getTotalInodes();
+                updateFrom(fileStore);
                 return true;
             }
         }
         return false;
     }
-
 }

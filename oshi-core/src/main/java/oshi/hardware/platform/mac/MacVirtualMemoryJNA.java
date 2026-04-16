@@ -1,13 +1,14 @@
 /*
- * Copyright 2025 The OSHI Project Contributors
+ * Copyright 2025-2026 The OSHI Project Contributors
  * SPDX-License-Identifier: MIT
  */
 package oshi.hardware.platform.mac;
 
-import com.sun.jna.Native;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import oshi.annotation.concurrent.ThreadSafe;
+import oshi.hardware.common.platform.mac.MacVirtualMemory;
 import oshi.jna.ByRef.CloseableIntByReference;
 import oshi.jna.Struct.CloseableVMStatistics;
 import oshi.jna.Struct.CloseableXswUsage;
@@ -43,12 +44,13 @@ final class MacVirtualMemoryJNA extends MacVirtualMemory {
         long swapPagesOut = 0L;
         try (CloseableVMStatistics vmStats = new CloseableVMStatistics();
                 CloseableIntByReference size = new CloseableIntByReference(vmStats.size() / SystemB.INT_SIZE)) {
-            if (0 == SystemB.INSTANCE.host_statistics(SystemB.INSTANCE.mach_host_self(), SystemB.HOST_VM_INFO, vmStats,
-                    size)) {
+            int ret = SystemB.INSTANCE.host_statistics(SystemB.INSTANCE.mach_host_self(), SystemB.HOST_VM_INFO, vmStats,
+                    size);
+            if (0 == ret) {
                 swapPagesIn = ParseUtil.unsignedIntToLong(vmStats.pageins);
                 swapPagesOut = ParseUtil.unsignedIntToLong(vmStats.pageouts);
             } else {
-                LOG.error("Failed to get host VM info. Error code: {}", Native.getLastError());
+                LOG.error("Failed to get host VM info. Error code: {}", ret);
             }
         }
         return new Pair<>(swapPagesIn, swapPagesOut);

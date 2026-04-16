@@ -10,9 +10,9 @@ import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 import static oshi.ffm.mac.MacSystem.GROUP;
-import static oshi.ffm.mac.MacSystem.PASSWD;
 import static oshi.ffm.mac.MacSystem.MAXCOMLEN;
 import static oshi.ffm.mac.MacSystem.MAXPATHLEN;
+import static oshi.ffm.mac.MacSystem.PASSWD;
 import static oshi.ffm.mac.MacSystem.PBI_COMM;
 import static oshi.ffm.mac.MacSystem.PBI_FLAGS;
 import static oshi.ffm.mac.MacSystem.PBI_GID;
@@ -83,11 +83,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import oshi.annotation.concurrent.ThreadSafe;
-import oshi.driver.mac.ThreadInfo;
+import oshi.driver.common.mac.ThreadInfo;
 import oshi.ffm.ForeignFunctions;
 import oshi.ffm.mac.IOKit.IOIterator;
 import oshi.ffm.mac.IOKit.IORegistryEntry;
 import oshi.software.common.AbstractOSProcess;
+import oshi.software.common.os.mac.MacOSThread;
 import oshi.software.os.OSThread;
 import oshi.util.GlobalConfig;
 import oshi.util.ParseUtil;
@@ -518,7 +519,7 @@ public class MacOSProcessFFM extends AbstractOSProcess {
             this.groupID = Integer.toString(gid);
             MemorySegment grgid = getgrgid(gid);
             if (grgid != null) {
-                MemorySegment groupStruct = ForeignFunctions.getStructFromNativePointer(pwuid, GROUP, arena);
+                MemorySegment groupStruct = ForeignFunctions.getStructFromNativePointer(grgid, GROUP, arena);
                 MemorySegment nameAddress = groupStruct.get(ADDRESS, GROUP.byteOffset(groupElement("gr_name")));
                 this.group = ForeignFunctions.getStringFromNativePointer(nameAddress, arena);
             } else {

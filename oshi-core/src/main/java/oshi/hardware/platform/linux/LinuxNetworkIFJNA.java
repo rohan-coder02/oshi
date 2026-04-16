@@ -19,8 +19,9 @@ import com.sun.jna.platform.linux.Udev.UdevDevice;
 
 import oshi.annotation.concurrent.ThreadSafe;
 import oshi.hardware.NetworkIF;
+import oshi.hardware.common.platform.linux.LinuxNetworkIF;
 import oshi.util.Util;
-import oshi.util.platform.linux.SysPath;
+import oshi.util.linux.SysPath;
 
 /**
  * JNA-based Linux network interface implementation.

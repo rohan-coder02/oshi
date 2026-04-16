@@ -20,10 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import oshi.annotation.concurrent.ThreadSafe;
+import oshi.driver.linux.proc.AuxvFFM;
 import oshi.ffm.linux.LinuxLibcFunctions;
 import oshi.ffm.linux.UdevFunctions;
+import oshi.hardware.common.platform.linux.LinuxCentralProcessor;
+import oshi.software.os.linux.LinuxOperatingSystemFFM;
 import oshi.util.FileUtil;
 import oshi.util.ParseUtil;
+import oshi.util.driver.linux.proc.Auxv;
 import oshi.util.tuples.Quartet;
 
 /**
@@ -34,6 +38,15 @@ import oshi.util.tuples.Quartet;
 public final class LinuxCentralProcessorFFM extends LinuxCentralProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(LinuxCentralProcessorFFM.class);
+
+    public LinuxCentralProcessorFFM() {
+        super(LinuxOperatingSystemFFM.hz());
+    }
+
+    @Override
+    protected long queryHwcap() {
+        return AuxvFFM.queryAuxv().getOrDefault(Auxv.AT_HWCAP, 0L);
+    }
 
     @Override
     public double[] getSystemLoadAverage(int nelem) {

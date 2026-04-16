@@ -1,0 +1,27 @@
+--add-opens
+  com.github.oshi.common/oshi=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.hardware=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.hardware.common=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.software.os=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.software.common=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.hardware.common.platform.linux=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.util.driver.linux=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.util.driver.linux.proc=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.util=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.util.tuples=org.junit.platform.commons
+--add-opens
+  com.github.oshi.common/oshi.util.driver.unix=org.junit.platform.commons
+
+--add-modules
+  org.hamcrest,org.slf4j.simple
+--add-reads
+  com.github.oshi.common=org.junit.jupiter.api,org.hamcrest,java.desktop

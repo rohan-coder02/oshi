@@ -4,6 +4,8 @@
 
 <suppressions>
     <suppress checks=".*" files="[\\/]demo[\\/].*"/>
+    <suppress checks=".*" files="[\\/]benchmark[\\/].*"/>
+    <suppress checks=".*" files="[\\/]comparison[\\/].*"/>
 
     <!-- Intentional style breaks -->
     <suppress checks="ConstantName" files="ParseUtil\.java" lines="116-136"/>
@@ -18,8 +20,6 @@
     <suppress checks="MethodName" files="[\\/]jna[\\/].*"/>
     <suppress checks="ParameterName" files="[\\/]jna[\\/].*"/>
     <suppress checks="TypeName" files="[\\/]jna[\\/].*"/>
-
-    <suppress checks="MethodName" files="MacGlobalMemory\.java" lines="137"/>
 
     <!-- FFM convention -->
     <suppress checks="InterfaceIsType" files="[\\/]ffm[\\/].*"/>

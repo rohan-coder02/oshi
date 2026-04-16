@@ -1,6 +1,34 @@
-# 6.11.2 (in progress)
+# 6.12.0 (in progress)
 
-* Your contribution here!
+##### New Features
+* [#3127](https://github.com/oshi/oshi/pull/3127): Add oshi-benchmark module with JMH benchmarks comparing JNA and FFM implementations - [@dbwiddis](https://github.com/dbwiddis).
+* [#3130](https://github.com/oshi/oshi/pull/3130),
+  [#3132](https://github.com/oshi/oshi/pull/3132),
+  [#3133](https://github.com/oshi/oshi/pull/3133),
+  [#3134](https://github.com/oshi/oshi/pull/3134),
+  [#3135](https://github.com/oshi/oshi/pull/3135),
+  [#3138](https://github.com/oshi/oshi/pull/3138),
+  [#3140](https://github.com/oshi/oshi/pull/3140): Create oshi-common module; move JNA-free common code to enable future FFM-only consumers - [@dbwiddis](https://github.com/dbwiddis).
+* [#3150](https://github.com/oshi/oshi/pull/3150): Add JNA vs FFM native comparison test suite validating API parity across all OSHI components - [@dbwiddis](https://github.com/dbwiddis).
+
+##### Bug fixes / Improvements
+* [#3126](https://github.com/oshi/oshi/pull/3126): FFM migration of WindowsOSProcess - [@rohan-coder02](https://github.com/rohan-coder02).
+* [#3128](https://github.com/oshi/oshi/pull/3128): Fix Mac FFM TIMEVAL struct layout missing 4-byte trailing padding - [@dbwiddis](https://github.com/dbwiddis).
+* [#3136](https://github.com/oshi/oshi/pull/3136): Push Linux USER_HZ and PAGE_SIZE into JNA/FFM OS subclasses; wire through HAL, processor, memory, process, and thread classes - [@dbwiddis](https://github.com/dbwiddis).
+* [#3139](https://github.com/oshi/oshi/pull/3139): Split LinuxGraphicsCard, LinuxGpuStats, and NvmlUtil across modules - [@dbwiddis](https://github.com/dbwiddis).
+* [#3141](https://github.com/oshi/oshi/pull/3141): Split WindowsOSProcess into superclass with JNA/FFM subclasses; add VersionHelpersFFM; remove TOKEN_DUPLICATE - [@dbwiddis](https://github.com/dbwiddis).
+* [#3143](https://github.com/oshi/oshi/pull/3143): Move PerfmonConstants, WindowsPowerSource, and WindowsOSFileStore to oshi-common; set up Windows driver, hardware, and software packages - [@dbwiddis](https://github.com/dbwiddis).
+* [#3144](https://github.com/oshi/oshi/pull/3144): Move ThreadInfo, MacSoundCard, and MacOSThread to oshi-common; set up macOS driver, hardware, and software packages - [@dbwiddis](https://github.com/dbwiddis).
+* [#3145](https://github.com/oshi/oshi/pull/3145): Move macOS OperatingSystem tree to oshi-common; split MacFileSystem and MacOSFileStore; add JNA suffix to remaining OS classes - [@dbwiddis](https://github.com/dbwiddis).
+* [#3146](https://github.com/oshi/oshi/pull/3146),
+  [#3147](https://github.com/oshi/oshi/pull/3147),
+  [#3149](https://github.com/oshi/oshi/pull/3149): Move macOS HardwareAbstractionLayer tree to oshi-common - [@dbwiddis](https://github.com/dbwiddis).
+* [#3152](https://github.com/oshi/oshi/pull/3152): Fix FFM TCP stats sysctl failure on Apple Silicon; suppress missing AppleHDA.kext log noise on ARM macOS - [@dbwiddis](https://github.com/dbwiddis).
+* [#3153](https://github.com/oshi/oshi/pull/3153): Fix FFM network stats to use two-call sysctl pattern matching JNA approach - [@dbwiddis](https://github.com/dbwiddis).
+* [#3154](https://github.com/oshi/oshi/pull/3154): Improve API documentation: usage examples, platform notes, cross-references, JEP 472 guidance, and virtual memory model differences - [@dbwiddis](https://github.com/dbwiddis).
+* [#3160](https://github.com/oshi/oshi/pull/3160): Fix LinuxSensors fan and voltage discovery passing wrong path to getSensorFilesFromPath - [@dbwiddis](https://github.com/dbwiddis).
+* [#3161](https://github.com/oshi/oshi/pull/3161): Add Linux hardware unit tests; fix parseDecimalMemorySizeToBinary for single-char suffixes; use platform-independent path separators - [@dbwiddis](https://github.com/dbwiddis).
+* [#3164](https://github.com/oshi/oshi/pull/3164): Refactor Windows perfmon counter enums into oshi-common for sharing between JNA and FFM implementations - [@dbwiddis](https://github.com/dbwiddis).
 
 # 6.11.0 (2026-04-04), 6.11.1 (2026-04-07)
 
